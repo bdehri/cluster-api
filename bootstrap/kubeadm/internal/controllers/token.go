@@ -22,6 +22,7 @@ import (
 
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	bootstrapapi "k8s.io/cluster-bootstrap/token/api"
 	bootstraputil "k8s.io/cluster-bootstrap/token/util"
@@ -101,6 +102,9 @@ func refreshToken(ctx context.Context, c client.Client, token string, ttl time.D
 func shouldRotate(ctx context.Context, c client.Client, token string, ttl time.Duration) (bool, error) {
 	secret, err := getToken(ctx, c, token)
 	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return true, nil
+		}
 		return false, err
 	}
 
